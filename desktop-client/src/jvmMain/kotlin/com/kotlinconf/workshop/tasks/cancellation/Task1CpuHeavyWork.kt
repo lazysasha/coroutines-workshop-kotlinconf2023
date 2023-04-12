@@ -5,9 +5,10 @@ import kotlinx.coroutines.*
 fun main() = runBlocking {
     val job = launch(Dispatchers.IO) {
         var index = 0
-        while (true) {
+        while (true) { // or while(isActive)
             val result = doCpuHeavyWork(200)
             println("Done (${index++}): $result")
+            yield() // or ensureActive()
         }
     }
 

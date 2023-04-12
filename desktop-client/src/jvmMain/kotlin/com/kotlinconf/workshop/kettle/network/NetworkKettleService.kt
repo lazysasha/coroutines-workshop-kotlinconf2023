@@ -11,6 +11,7 @@ import io.ktor.client.call.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -52,13 +53,19 @@ class NetworkKettleService : KettleService, WorkshopKtorService(configureWebsock
 
     // Task. Create a flow that emits the kettle temperature every second
     override fun observeTemperature(): Flow<CelsiusTemperature> = flow {
-        emit(getTemperature())
+        while(true) {
+            emit(getTemperature())
+            delay(1000)
+        }
     }
 
     // Task. Create a flow that emits the Kettle power state whenever it receives a WebSocket message
     override fun observeKettlePowerState(): Flow<KettlePowerState> = flow {
         val socketSession = openWebSocketSession()
-        val kettlePowerState: KettlePowerState = socketSession.receiveDeserialized()
-        log("Received element via websocket: $kettlePowerState")
+        while (true) {
+            val kettlePowerState: KettlePowerState = socketSession.receiveDeserialized()
+            emit(kettlePowerState)
+            log("Received element via websocket: $kettlePowerState")
+        }
     }
 }

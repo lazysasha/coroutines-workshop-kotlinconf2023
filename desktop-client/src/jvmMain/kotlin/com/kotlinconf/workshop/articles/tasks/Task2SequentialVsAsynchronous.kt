@@ -8,5 +8,10 @@ import kotlinx.coroutines.coroutineScope
 
 // Task: Implement concurrent loading of articles
 suspend fun loadArticlesConcurrently(service: BlogService): List<Article> = coroutineScope {
-    TODO()
+    val articles = service.getArticleInfoList()
+    articles.map {
+        async {
+            Article(it, service.getComments(it))
+        }
+    }.awaitAll()
 }
