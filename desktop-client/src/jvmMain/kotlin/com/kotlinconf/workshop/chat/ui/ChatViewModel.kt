@@ -30,7 +30,13 @@ class ChatViewModel(private val chatService: ChatService) {
 
     init {
         scope.launch {
-            // TODO
+            chatService.observeMessageEvents().collect { message ->
+                if(message.isImportant()) {
+                    _importantMessages.update { it + message }
+                } else {
+                    _allOtherMessages.update { it + message}
+                }
+            }
         }
     }
 }

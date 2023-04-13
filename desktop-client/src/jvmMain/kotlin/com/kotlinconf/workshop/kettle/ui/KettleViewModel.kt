@@ -6,12 +6,13 @@ import com.kotlinconf.workshop.kettle.CelsiusTemperature
 import com.kotlinconf.workshop.kettle.FahrenheitTemperature
 import com.kotlinconf.workshop.kettle.KettlePowerState
 import com.kotlinconf.workshop.kettle.network.KettleService
+import com.kotlinconf.workshop.kettle.toFahrenheit
+import com.kotlinconf.workshop.kettle.utils.averageOfLast
 import com.kotlinconf.workshop.util.log
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class KettleViewModel(
@@ -53,15 +54,17 @@ class KettleViewModel(
 
     val celsiusTemperature: Flow<CelsiusTemperature> =
         kettleService.observeTemperature()
+            .shareIn(scope, SharingStarted.Lazily) // Convert cold flow to hot flow to make sure value is re-used when converting Celsius to Fahrenheit
+    // Using a state flow:
+//            .stateIn(scope, SharingStarted.Lazily, null)
 
     val fahrenheitTemperature: Flow<FahrenheitTemperature?> =
-        flowOf(null)
+        celsiusTemperature.map { it.toFahrenheit() }
 
     val smoothCelsiusTemperature: Flow<CelsiusTemperature?> =
-        flowOf(null)
-//        celsiusTemperature.map {
-//            it.value
-//        }.averageOfLast(5).map {
-//            CelsiusTemperature(it)
-//        }
+        celsiusTemperature.map {
+            it.value
+        }.averageOfLast(5).map {
+            CelsiusTemperature(it)
+        }
 }
